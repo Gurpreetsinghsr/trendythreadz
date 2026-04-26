@@ -8,7 +8,6 @@ type CartItem = { id: string; qty: number };
 type CartContextType = {
   items: CartItem[];
   addToCart: (id: string) => void;
-  decreaseQty: (id: string) => void;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
   count: number;
@@ -44,13 +43,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           if (exists) return prev.map((x) => (x.id === id ? { ...x, qty: x.qty + 1 } : x));
           return [...prev, { id, qty: 1 }];
         });
-      },
-      decreaseQty: (id: string) => {
-        setItems((prev) => prev.flatMap((x) => {
-          if (x.id !== id) return [x];
-          if (x.qty === 1) return [];
-          return [{ ...x, qty: x.qty - 1 }];
-        }));
       },
       removeFromCart: (id: string) => {
         setItems((prev) => prev.filter((x) => x.id !== id));
