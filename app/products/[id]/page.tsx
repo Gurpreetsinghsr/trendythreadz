@@ -1,14 +1,27 @@
-"use client";
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { AddToCartButton } from "@/components/add-to-cart-button";
+import { getProductById, products } from "@/lib/products";
 
-import { useParams, notFound } from "next/navigation";
-import { getProductById } from "@/lib/products";
-import { useCart } from "@/lib/cart-context";
+type Params = Promise<{ id: string }>;
 
-export default function ProductDetailPage() {
-  const params = useParams<{ id: string }>();
-  const product = getProductById(params.id);
-  const { addToCart } = useCart();
+export function generateStaticParams() {
+  return products.map((product) => ({ id: product.id }));
+}
 
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { id } = await params;
+  const product = getProductById(id);
+  if (!product) return { title: "Product not found | Trendy Threadz" };
+  return {
+    title: `${product.name} | Trendy Threadz`,
+    description: product.description
+  };
+}
+
+export default async function ProductDetailPage({ params }: { params: Params }) {
+  const { id } = await params;
+  const product = getProductById(id);
   if (!product) return notFound();
 
   return (
@@ -21,7 +34,7 @@ export default function ProductDetailPage() {
           <p>{product.description}</p>
           <p><strong>Crafted by:</strong> {product.artisan}</p>
           <p className="price">${product.price.toFixed(2)}</p>
-          <button className="btn btn-primary" onClick={() => addToCart(product.id)}>Add to Cart</button>
+          <AddToCartButton id={product.id} name={product.name} />
         </div>
       </div>
     </section>

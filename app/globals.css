@@ -17,6 +17,14 @@ body {
 
 a { color: inherit; text-decoration: none; }
 img { max-width: 100%; height: auto; }
+input, select {
+  border: 1px solid #d8cfc3;
+  background: #fff;
+  color: var(--brown);
+  border-radius: 10px;
+  padding: .72rem .8rem;
+  font: inherit;
+}
 
 .container { width: min(var(--max), 92%); margin-inline: auto; }
 
@@ -36,7 +44,7 @@ img { max-width: 100%; height: auto; }
   padding: .9rem 0;
 }
 .brand { font-family: "Playfair Display", ui-serif, Georgia; font-size: 1.4rem; }
-.nav { display: flex; gap: 1rem; align-items: center; }
+.nav { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
 .nav a { padding: .45rem .7rem; border-radius: 999px; }
 .nav a:hover, .nav a:focus-visible { background: #fff9; outline: none; }
 
@@ -55,6 +63,7 @@ img { max-width: 100%; height: auto; }
   border: 0; border-radius: 999px; padding: .8rem 1.2rem; font-weight: 700;
   cursor: pointer; transition: transform .2s ease, background-color .2s ease;
 }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
 .btn-primary { background: var(--brown); color: white; }
 .btn-secondary { background: #fff; color: var(--brown); border: 1px solid #d8cfc3; }
 .btn:hover, .btn:focus-visible { transform: translateY(-2px) scale(1.02); outline: 2px solid var(--gold); }
@@ -63,6 +72,12 @@ img { max-width: 100%; height: auto; }
 .section h2 { font-family: "Playfair Display", ui-serif, Georgia; font-size: clamp(1.8rem, 3vw, 2.5rem); }
 .grid { display: grid; gap: 1rem; }
 .products { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.filters {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: .8rem;
+}
 .card {
   background: #fff;
   border: 1px solid #e7ddd1;
