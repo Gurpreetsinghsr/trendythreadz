@@ -1,42 +1,53 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import type { Metadata } from "next";
-import { AddToCartButton } from "@/components/add-to-cart-button";
-import { getProductById, products } from "@/lib/products";
+import { ProductDetailClient } from "@/components/shop/ProductDetailClient";
+import { ProductCard } from "@/components/shop/ProductCard";
+import { getProductById, getRelatedProducts } from "@/lib/db/products";
+import { getArtisanById } from "@/lib/db/artisans";
 
-type Params = Promise<{ id: string }>;
+export const dynamic = "force-dynamic";
 
-export function generateStaticParams() {
-  return products.map((product) => ({ id: product.id }));
+type Props = { params: Promise<{ id: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const product = await getProductById(id);
+  if (!product) return { title: "Product Not Found" };
+  return { title: product.name, description: product.description };
 }
 
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+export default async function ProductDetailPage({ params }: Props) {
   const { id } = await params;
-  const product = getProductById(id);
-  if (!product) return { title: "Product not found | Trendy Threadz" };
-  return {
-    title: `${product.name} | Trendy Threadz`,
-    description: product.description
-  };
-}
+  const product = await getProductById(id);
+  if (!product) notFound();
 
-export default async function ProductDetailPage({ params }: { params: Params }) {
-  const { id } = await params;
-  const product = getProductById(id);
-  if (!product) return notFound();
+  const [related, artisan] = await Promise.all([
+    getRelatedProducts(product, 4),
+    product.artisanId ? getArtisanById(product.artisanId) : Promise.resolve(null),
+  ]);
 
   return (
-    <section className="section">
-      <div className="container" style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", alignItems: "start" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={product.image} alt={product.name} style={{ borderRadius: 16, border: "1px solid #e7ddd1", width: "100%", aspectRatio: "4/3", objectFit: "cover" }} />
-        <div>
-          <h1 style={{ fontFamily: "Playfair Display, serif" }}>{product.name}</h1>
-          <p>{product.description}</p>
-          <p><strong>Crafted by:</strong> {product.artisan}</p>
-          <p className="price">${product.price.toFixed(2)}</p>
-          <AddToCartButton id={product.id} name={product.name} />
-        </div>
+    <div className="section">
+      <div className="container">
+        <ProductDetailClient product={product} artisan={artisan} />
+        {related.length > 0 && (
+          <div style={{ marginTop: "4rem" }}>
+            <div className="section-header">
+              <div>
+                <p className="section-eyebrow">You may also like</p>
+                <h2>Related Products</h2>
+              </div>
+              <Link href="/products" className="btn btn-ghost" style={{ gap: ".4rem", fontSize: ".88rem" }}>
+                View All →
+              </Link>
+            </div>
+            <div className="grid products-grid">
+              {related.map((p) => <ProductCard key={p.id} product={p} />)}
+            </div>
+          </div>
+        )}
       </div>
-    </section>
+    </div>
   );
 }

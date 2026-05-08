@@ -1,12 +1,27 @@
-import { ProductFilterGrid } from "@/components/product-filter-grid";
+import type { Metadata } from "next";
+import { ProductFilterGrid } from "@/components/shop/ProductFilterGrid";
+import { getActiveProducts } from "@/lib/db/products";
 
-export default function ProductsPage() {
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "All Products",
+  description: "Explore our full range of handcrafted crochet products by rural Indian women artisans.",
+};
+
+export default async function ProductsPage() {
+  const products = await getActiveProducts();
+
   return (
     <section className="section">
       <div className="container">
-        <h1 style={{ fontFamily: "Playfair Display, serif" }}>All Products</h1>
-        <p>Explore handcrafted crochet made with love, filter by category, and sort by price.</p>
-        <ProductFilterGrid />
+        <p className="section-eyebrow">Handmade with love</p>
+        <h1 style={{ marginBottom: ".5rem" }}>All Products</h1>
+        <p style={{ color: "var(--brown-light)", marginBottom: "2rem", maxWidth: "52ch" }}>
+          Every piece is hand-crafted by a skilled woman artisan in rural India.
+          Filter by category, sort by price, or search for exactly what you need.
+        </p>
+        <ProductFilterGrid initialProducts={products} />
       </div>
     </section>
   );
