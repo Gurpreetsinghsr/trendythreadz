@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Package, Truck, CheckCircle, Clock, MapPin, Loader2 } from "lucide-react";
 import type { Order } from "@/lib/types";
@@ -21,7 +21,8 @@ const STATUS_LABEL: Record<string, string> = {
   shipped: "Shipped", delivered: "Delivered", cancelled: "Cancelled",
 };
 
-export default function TrackOrderPage() {
+// Inner component that reads searchParams (must be inside Suspense)
+function TrackOrderContent() {
   const searchParams = useSearchParams();
   const [orderId,  setOrderId]  = useState(searchParams.get("order") ?? "");
   const [loading,  setLoading]  = useState(false);
@@ -135,5 +136,20 @@ export default function TrackOrderPage() {
         )}
       </div>
     </section>
+  );
+}
+
+// Wrap in Suspense — required because useSearchParams() opts the page into CSR
+export default function TrackOrderPage() {
+  return (
+    <Suspense fallback={
+      <section className="section">
+        <div className="container" style={{ maxWidth: 600, textAlign: "center" }}>
+          <Loader2 size={32} style={{ animation: "spin 1s linear infinite", margin: "4rem auto", display: "block", color: "var(--gold)" }} />
+        </div>
+      </section>
+    }>
+      <TrackOrderContent />
+    </Suspense>
   );
 }
