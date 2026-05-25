@@ -6,7 +6,7 @@ import {
   GoogleAuthProvider, signInWithPopup, type User,
 } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "./firebase";
+import { auth, db, isFirebaseConfigured } from "./firebase";
 
 type AdminAuthCtx = {
   user: User | null;
@@ -27,15 +27,22 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // If Firebase isn't configured (e.g. env vars not set), stop loading and bail out.
+    if (!isFirebaseConfigured || !auth || !db) {
+      setLoading(false);
+      return;
+    }
+
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
-        // Check admin status: Firestore admins/{uid} OR env-listed emails
-        const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? "").split(",").map((e) => e.trim());
+        const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? "")
+          .split(",").map((e) => e.trim()).filter(Boolean);
+
         if (adminEmails.includes(u.email ?? "")) {
           setIsAdmin(true);
         } else {
-          const snap = await getDoc(doc(db, "admins", u.uid));
+          const snap = await getDoc(doc(db!, "admins", u.uid));
           setIsAdmin(snap.exists());
         }
       } else {
@@ -47,11 +54,13 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function signIn() {
+    if (!auth) return;
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
   }
 
   async function signOut() {
+    if (!auth) return;
     await fbSignOut(auth);
     setIsAdmin(false);
   }
