@@ -3,13 +3,13 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
-import { ADMIN_EMAIL, ADMIN_PASSWORD, useAdminAuth } from "@/lib/auth";
+import { ADMIN_EMAIL, useAdminAuth } from "@/lib/auth";
 
 export default function LoginPage() {
   const { user, isAdmin, loading, signIn } = useAdminAuth();
   const router = useRouter();
   const [email, setEmail] = useState(ADMIN_EMAIL);
-  const [password, setPassword] = useState(ADMIN_PASSWORD);
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
