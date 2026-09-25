@@ -21,6 +21,14 @@ function snap<T>(s: { id: string; data(): object }): T {
   return { id: s.id, ...s.data() } as T;
 }
 
+// Firestore rejects `undefined` values. Optional fields are common in the
+// admin forms, so omit them before every write instead of failing the save.
+function omitUndefined<T extends Record<string, unknown>>(data: T): T {
+  return Object.fromEntries(
+    Object.entries(data).filter(([, value]) => value !== undefined),
+  ) as T;
+}
+
 // ─── Products ─────────────────────────────────────────────────────────────────
 export async function getProducts(): Promise<Product[]> {
   const s = await getDocs(query(collection(requireDb(), "products"), orderBy("createdAt", "desc")));
@@ -31,7 +39,7 @@ export async function getProduct(id: string): Promise<Product | null> {
   return d.exists() ? snap<Product>(d) : null;
 }
 export async function saveProduct(id: string | null, data: Omit<Product, "id">): Promise<string> {
-  const payload = { ...data, updatedAt: new Date().toISOString() };
+  const payload = omitUndefined({ ...data, updatedAt: new Date().toISOString() });
   if (id) { await updateDoc(doc(requireDb(), "products", id), payload); return id; }
   const ref = await addDoc(collection(requireDb(), "products"), { ...payload, createdAt: new Date().toISOString() });
   return ref.id;
@@ -60,7 +68,7 @@ export async function getArtisan(id: string): Promise<Artisan | null> {
   return d.exists() ? snap<Artisan>(d) : null;
 }
 export async function saveArtisan(id: string | null, data: Omit<Artisan, "id">): Promise<string> {
-  const payload = { ...data, updatedAt: new Date().toISOString() };
+  const payload = omitUndefined({ ...data, updatedAt: new Date().toISOString() });
   if (id) { await updateDoc(doc(requireDb(), "artisans", id), payload); return id; }
   const ref = await addDoc(collection(requireDb(), "artisans"), { ...payload, createdAt: new Date().toISOString() });
   return ref.id;
