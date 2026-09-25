@@ -320,6 +320,9 @@ tbody tr:hover { background: var(--bg); }
 }
 .login-logo { font-family: "Cormorant Garamond", serif; font-size: 1.8rem; font-weight: 700; color: var(--brand); margin-bottom: .25rem; }
 .login-sub  { font-size: .85rem; color: var(--text-sm); margin-bottom: 2rem; }
+.login-form { display: grid; gap: 1rem; text-align: left; }
+.login-form input { width: 100%; }
+.login-error { color: var(--danger); font-size: .85rem; margin: 0; }
 
 /* ─── Image preview ──────────────────────────────────────────────────── */
 .img-preview {
