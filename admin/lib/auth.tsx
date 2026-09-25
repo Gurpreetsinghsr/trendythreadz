@@ -1,15 +1,20 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import {
-  onAuthStateChanged, signOut as fbSignOut,
-  signInWithEmailAndPassword, type User,
-} from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db, isFirebaseConfigured } from "./firebase";
+
+export const ADMIN_EMAIL = "trendythreadz@gmail.com";
+export const ADMIN_PASSWORD = "Vikram@123";
+
+const ADMIN_SESSION_KEY = "trendythreadz-admin-session";
+
+type AdminUser = {
+  email: string;
+  displayName: string;
+  photoURL: null;
+};
 
 type AdminAuthCtx = {
-  user: User | null;
+  user: AdminUser | null;
   isAdmin: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
@@ -21,51 +26,34 @@ const Ctx = createContext<AdminAuthCtx>({
   signIn: async () => {}, signOut: async () => {},
 });
 
-export const ADMIN_EMAIL = "trendythreadz@gmail.com";
-
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
-  const [user,    setUser]    = useState<User | null>(null);
+  const [user,    setUser]    = useState<AdminUser | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // If Firebase isn't configured (e.g. env vars not set), stop loading and bail out.
-    if (!isFirebaseConfigured || !auth || !db) {
-      setLoading(false);
-      return;
+    const hasSession = window.localStorage.getItem(ADMIN_SESSION_KEY) === "true";
+    if (hasSession) {
+      setUser({ email: ADMIN_EMAIL, displayName: "Trendy Threadz Admin", photoURL: null });
+      setIsAdmin(true);
     }
-
-    const unsub = onAuthStateChanged(auth, async (u) => {
-      setUser(u);
-      if (u) {
-        const adminEmails = [
-          ADMIN_EMAIL,
-          ...(process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? "")
-            .split(",").map((e) => e.trim()).filter(Boolean),
-        ];
-
-        if (adminEmails.includes(u.email ?? "")) {
-          setIsAdmin(true);
-        } else {
-          const snap = await getDoc(doc(db!, "admins", u.uid));
-          setIsAdmin(snap.exists());
-        }
-      } else {
-        setIsAdmin(false);
-      }
-      setLoading(false);
-    });
-    return unsub;
+    setLoading(false);
   }, []);
 
   async function signIn(email: string, password: string) {
-    if (!auth) return;
-    await signInWithEmailAndPassword(auth, email, password);
+    if (email.trim().toLowerCase() !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
+      throw new Error("Invalid admin credentials");
+    }
+
+    const adminUser = { email: ADMIN_EMAIL, displayName: "Trendy Threadz Admin", photoURL: null };
+    window.localStorage.setItem(ADMIN_SESSION_KEY, "true");
+    setUser(adminUser);
+    setIsAdmin(true);
   }
 
   async function signOut() {
-    if (!auth) return;
-    await fbSignOut(auth);
+    window.localStorage.removeItem(ADMIN_SESSION_KEY);
+    setUser(null);
     setIsAdmin(false);
   }
 
