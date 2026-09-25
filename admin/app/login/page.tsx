@@ -1,17 +1,35 @@
 "use client";
 
-import { useEffect } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Chrome, Lock } from "lucide-react";
-import { useAdminAuth } from "@/lib/auth";
+import { Lock } from "lucide-react";
+import { ADMIN_EMAIL, useAdminAuth } from "@/lib/auth";
 
 export default function LoginPage() {
   const { user, isAdmin, loading, signIn } = useAdminAuth();
   const router = useRouter();
+  const [email, setEmail] = useState(ADMIN_EMAIL);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!loading && user && isAdmin) router.replace("/");
   }, [loading, user, isAdmin, router]);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      await signIn(email, password);
+    } catch {
+      setError("The email or password is incorrect. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <div className="login-page">
@@ -34,10 +52,37 @@ export default function LoginPage() {
           </div>
         )}
 
-        <button className="btn btn-primary btn-lg" style={{ width: "100%", gap: ".6rem" }} onClick={signIn} disabled={loading}>
-          <Chrome size={18} />
-          {loading ? "Signing in…" : "Sign in with Google"}
-        </button>
+        <form className="login-form" onSubmit={handleSubmit}>
+          <label className="form-group" htmlFor="email">
+            <span className="form-label">Email</span>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              autoComplete="email"
+              required
+            />
+          </label>
+
+          <label className="form-group" htmlFor="password">
+            <span className="form-label">Password</span>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
+              required
+            />
+          </label>
+
+          {error && <p className="login-error" role="alert">{error}</p>}
+
+          <button className="btn btn-primary btn-lg" style={{ width: "100%" }} type="submit" disabled={loading || isSubmitting}>
+            {isSubmitting ? "Signing in…" : "Sign in"}
+          </button>
+        </form>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import {
   onAuthStateChanged, signOut as fbSignOut,
-  GoogleAuthProvider, signInWithPopup, type User,
+  signInWithEmailAndPassword, type User,
 } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db, isFirebaseConfigured } from "./firebase";
@@ -12,7 +12,7 @@ type AdminAuthCtx = {
   user: User | null;
   isAdmin: boolean;
   loading: boolean;
-  signIn: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -20,6 +20,8 @@ const Ctx = createContext<AdminAuthCtx>({
   user: null, isAdmin: false, loading: true,
   signIn: async () => {}, signOut: async () => {},
 });
+
+export const ADMIN_EMAIL = "trendythreadz@gmail.com";
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [user,    setUser]    = useState<User | null>(null);
@@ -36,8 +38,11 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
-        const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? "")
-          .split(",").map((e) => e.trim()).filter(Boolean);
+        const adminEmails = [
+          ADMIN_EMAIL,
+          ...(process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? "")
+            .split(",").map((e) => e.trim()).filter(Boolean),
+        ];
 
         if (adminEmails.includes(u.email ?? "")) {
           setIsAdmin(true);
@@ -53,10 +58,9 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     return unsub;
   }, []);
 
-  async function signIn() {
+  async function signIn(email: string, password: string) {
     if (!auth) return;
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    await signInWithEmailAndPassword(auth, email, password);
   }
 
   async function signOut() {
